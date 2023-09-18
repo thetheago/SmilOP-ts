@@ -1,0 +1,5 @@
+function parseSmilFile() {
+    
+}
+
+export { parseSmilFile }

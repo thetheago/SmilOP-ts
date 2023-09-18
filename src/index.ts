@@ -1,16 +1,27 @@
-import { sos } from '@signageos/front-applet';
+require('./index.css');
 
-async function startApplet() {
-	const contentElement = document.getElementById('index');
-	const imgElements = [document.getElementById('image-1'), document.getElementById('image-2')]
+import sos from '@signageos/front-applet';
 
-	function getImgElement(...args) {
-		return imgElements.find((imgElement) => imgElement.getAttribute('data-args') === JSON.stringify(args)) ||
-			imgElements.find((imgElement) => imgElement.style.display === 'none');
-	}
-	await sos.onReady();
+import {
+	IContent,
+	playContent, 
+	stopContent, 
+	prepareContent, 
+	waitEndedContent,
+	saveContentIntoOfflineCacheAndFillData,
+} from './sos-workflow';
 
-	const contents = sos.config.contents ? JSON.parse(sos.config.contents) : [
+const contentElement = document.getElementById('index');
+const imgElements = [document.getElementById('image-1'), document.getElementById('image-2')]
+
+export function getImgElement(...args: [string, number, number, number, number]) {
+	return imgElements.find((imgElement) => imgElement.getAttribute('data-args') === JSON.stringify(args)) ||
+		imgElements.find((imgElement) => imgElement.style.display === 'none');
+}
+
+// Wait on sos data are ready (https://sdk.docs.signageos.io/api/js/content/latest/js-applet-basics)
+sos.onReady().then(async function main(){
+	const contents: IContent[] = sos.config.contents ? JSON.parse(sos.config.contents) : [
 		{
 			uid: 'video-1.mp4',
 			uri: 'https://static.signageos.io/assets/video-test-1_e07fc21a7a72e3d33478243bd75d7743.mp4'
@@ -52,7 +63,7 @@ async function startApplet() {
 			uri: 'https://static.signageos.io/assets/sssp-3.0-maggie_47dfc4c8c21b49c5d6f0ef1505ece49c.png'
 		},
 		{
-			uid: 'image-8.png',
+			uid: 'image-8',
 			uri: 'https://static.signageos.io/assets/tizen-2.4-bart_96c02fbd2df936e8bdd0b345f8874224.png'
 		},
 		{
@@ -81,64 +92,9 @@ async function startApplet() {
 		},
 	];
 
-	// Save all files parallel
-	await Promise.all(contents.map(async (content) => {
-		// Store files to offline storage (https://sdk.docs.signageos.io/api/js/content/latest/js-offline-cache-media-files)
-		const { filePath } = await sos.offline.cache.loadOrSaveFile(content.uid, content.uri);
-		content.filePath = filePath;
-	}));
-
-	for (const content of contents) {
-		content.arguments = [content.filePath, 0, 0, document.documentElement.clientWidth, document.documentElement.clientHeight];
-	}
+	await saveContentIntoOfflineCacheAndFillData(contents);
 
 	contentElement.innerHTML = '';
-
-	async function playContent(content) {
-		if (content.uid.indexOf('video-') === 0) {
-			await sos.video.play(...content.arguments);
-		}
-
-		if (content.uid.indexOf('image-') === 0) {
-			getImgElement(...content.arguments).style.display = 'block';
-		}
-		content.playing = true;
-	}
-
-	async function stopContent(content) {
-		if (content.playing) {
-			if (content.uid.indexOf('video-') === 0) {
-				await sos.video.stop(...content.arguments);
-			}
-			if (content.uid.indexOf('image-') === 0) {
-				const imgElement = getImgElement(...content.arguments);
-				imgElement.src = '';
-				imgElement.setAttribute('data-args', '');
-				imgElement.style.display = 'none';
-			}
-			content.playing = false;
-		}
-	}
-
-	async function prepareContent(content) {
-		if (content.uid.indexOf('video-') === 0) {
-			await sos.video.prepare(...content.arguments);
-		}
-		if (content.uid.indexOf('image-') === 0) {
-			const imgElement = getImgElement(...content.arguments);
-			imgElement.src = content.filePath;
-			imgElement.setAttribute('data-args', JSON.stringify(content.arguments));
-		}
-	}
-
-	async function waitEndedContent(content) {
-		if (content.uid.indexOf('video-') === 0) {
-			await sos.video.onceEnded(...content.arguments);
-		}
-		if (content.uid.indexOf('image-') === 0) {
-			await new Promise((resolve) => setTimeout(resolve, 3e3));
-		}
-	}
 
 	await prepareContent(contents[0]);
 
@@ -160,6 +116,4 @@ async function startApplet() {
 		}
 		await waitEndedContent(currentContent);
 	}
-}
-// Needed check for distinction between sos open and platform in box
-typeof sos !== 'undefined' ? startApplet() : window.addEventListener('sos.loaded', startApplet);
+});
