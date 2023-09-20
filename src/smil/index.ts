@@ -1,3 +1,3 @@
-import { parseSmilFile } from './smilParser'
+import { fetchAndParseSmilFile, getContents } from './smilParser'
 
-export { parseSmilFile }
+export { fetchAndParseSmilFile, getContents }

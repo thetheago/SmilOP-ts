@@ -3,13 +3,11 @@
   "version": "0.0.0",
   "main": "dist/index.html",
   "scripts": {
-    "start": "webpack serve --mode development",
+    "start": "webpack-dev-server --mode development",
     "prepare": "npm run clean && npm run build",
     "upload": "sos applet upload",
     "clean": "npx rimraf dist",
-    "escheck": "npx es-check es5 dist/*.js",
-    "build": "webpack --mode production && npm run escheck",
-    "postbuild": "npm run escheck",
+    "build": "webpack --mode production",
     "connect": "webpack --watch"
   },
   "files": [
@@ -25,6 +23,7 @@
     "@signageos/front-display": "^12.4.1",
     "@signageos/webpack-plugin": "^1.0.3",
     "babel-loader": "^8.3.0",
+    "cors-anywhere": "^0.4.1",
     "css-loader": "^6.8.1",
     "html-webpack-plugin": "^5.5.3",
     "style-loader": "^3.3.3",
@@ -36,5 +35,9 @@
   },
   "sos": {
     "appletUid": "dcab1db07274cfcc202524229dce7fb4fd3b7a82ecea57ac23"
+  },
+  "dependencies": {
+    "@types/xml-parser": "^1.2.31",
+    "xml-parser": "^1.2.1"
   }
 }
