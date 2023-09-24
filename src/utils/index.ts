@@ -1,3 +1,3 @@
-import { defaultPlaylist } from './utils.ts'
+import { defaultPlaylist } from './utils'
 
 export { defaultPlaylist }

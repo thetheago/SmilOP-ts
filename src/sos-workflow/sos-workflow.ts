@@ -1,36 +1,17 @@
 import sos from '@signageos/front-applet';
 
 import { getImgElement } from '..';
+import { IContent, IPlaylist } from './types';
 
-type IContentArguments = [
-    uri: string,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-]
-
-interface IContent {
-	/* Identificator of content */
-	uid: string,
-	/* Uri to the content */
-	uri: string,
-	/* Path to the file in the offline cache */
-	filePath?: string,
-	/* Details of where the content will play */
-	arguments?: IContentArguments,
-	/* If content is playing or not */
-	playing?: boolean,
-    /* Duration of content */
-    duration?: number,
-}
-
-async function saveContentIntoOfflineCacheAndFillData(contents: IContent[]): Promise<void> {
-	await Promise.all(contents.map(async (content) => {
-		// Store files to offline storage (https://sdk.docs.signageos.io/api/js/content/latest/js-offline-cache-media-files)
-		const { filePath } = await sos.offline.cache.loadOrSaveFile(content.uid, content.uri);
-		content.filePath = filePath;
-		content.arguments = [filePath, 0, 0, document.documentElement.clientWidth, document.documentElement.clientHeight];
+async function saveContentIntoOfflineCacheAndFillData(playlists: IPlaylist[]): Promise<void> {
+	await Promise.all(playlists.map(async (playlist) => {
+        return Promise.all(playlist.contents.map(async (content: IContent) => {
+            // Store files to offline storage (https://sdk.docs.signageos.io/api/js/content/latest/js-offline-cache-media-files)
+            const { filePath } = await sos.offline.cache.loadOrSaveFile(content.uid, content.uri);
+            content.filePath = filePath;
+            content.arguments = [filePath, 0, 0, document.documentElement.clientWidth, document.documentElement.clientHeight];
+            return content;
+        }));
 	}));
 }
 
@@ -79,4 +60,4 @@ async function waitEndedContent(content: IContent) {
     }
 }
 
-export { saveContentIntoOfflineCacheAndFillData, playContent, stopContent, prepareContent, waitEndedContent, IContent, IContentArguments }
+export { saveContentIntoOfflineCacheAndFillData, playContent, stopContent, prepareContent, waitEndedContent, IContent }
